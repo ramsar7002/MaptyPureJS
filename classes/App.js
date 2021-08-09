@@ -25,6 +25,8 @@ class App {
     this.#map = '';
     this.#mapE = '';
 
+    //Get data from local storage
+    this._getLocalStorage();
     form.addEventListener('submit', e => {
       this._newWorkout(e);
     });
@@ -32,6 +34,8 @@ class App {
     inputType.addEventListener('change', e => {
       this._toggleElavationField(e);
     });
+
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
   _getPosition() {
     const loc = navigator.geolocation?.getCurrentPosition(
@@ -57,12 +61,22 @@ class App {
     L.marker(coords).addTo(this.#map).bindPopup('Current location').openPopup();
 
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(work => {
+      this._renderWorkoutMarker(work);
+    });
   }
 
   _showForm(mapEvent) {
     this.#mapE = mapEvent;
+    form.style.display = 'grid';
     form.classList.remove('hidden');
     inputDistance.focus();
+  }
+
+  _hideForm() {
+    form.style.display = 'none';
+    form.classList.add('hidden');
   }
 
   _toggleElavationField(e) {
@@ -71,6 +85,9 @@ class App {
   }
 
   _renderWorkoutMarker = workout => {
+    const description = `${workout.name === 'running' ? '🏃‍♂️' : '🚴‍♀️'} ${
+      workout.name[0].toUpperCase() + workout.name.slice(1)
+    } on ${months[workout.date.getMonth()]} ${workout.date.getDay()}`;
     L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
@@ -82,7 +99,7 @@ class App {
           className: `${type}-popup`,
         })
       )
-      .setPopupContent(`Workout`)
+      .setPopupContent(description)
       .openPopup();
     //delete all fields text
     inputDistance.value = '';
@@ -90,7 +107,7 @@ class App {
     inputCadence.value = '';
     inputElevation.value = '';
 
-    form.classList.add('hidden');
+    this._hideForm();
   };
 
   _newWorkout(e) {
@@ -127,11 +144,15 @@ class App {
         } else return alert('Please enter elevation');
       }
       if (workout) this.#workouts.push(workout);
-      console.log(this.#workouts);
+
+      this._setLocalStorage();
     } else return alert('Please enter all fields');
   }
 
   _renderWorkout(workout) {
+    if (typeof workout.date === 'string') {
+      workout.date = new Date(workout.date);
+    }
     const description = `${
       workout.name[0].toUpperCase() + workout.name.slice(1)
     } on ${months[workout.date.getMonth()]} ${workout.date.getDay()}`;
@@ -171,6 +192,37 @@ class App {
     </div>`;
 
     form.insertAdjacentHTML('afterend', html);
+  }
+
+  _moveToPopup(e) {
+    const workoutEl = e.target.closest('.workout');
+    if (!workoutEl) return;
+    const workout = this.#workouts.find(
+      work => work.id === Number(workoutEl.dataset.id)
+    );
+    this.#map.setView(workout.coords, 17, {
+      animate: true,
+      pan: {
+        duration: 1,
+      },
+    });
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    console.log(data);
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+    });
   }
 }
 
