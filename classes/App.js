@@ -13,6 +13,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+let type;
 
 class App {
   #map;
@@ -69,36 +70,37 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
+  _renderWorkoutMarker = workout => {
+    L.marker(workout.coords)
+      .addTo(this.#map)
+      .bindPopup(
+        L.popup({
+          maxWidth: 250,
+          minWidth: 100,
+          autoClose: false,
+          closeOnClick: false,
+          className: `${type}-popup`,
+        })
+      )
+      .setPopupContent(`Workout`)
+      .openPopup();
+    //delete all fields text
+    inputDistance.value = '';
+    inputDuration.value = '';
+    inputCadence.value = '';
+    inputElevation.value = '';
+
+    form.classList.add('hidden');
+  };
+
   _newWorkout(e) {
     const validInputs = (...inputs) =>
       inputs.every(inp => Number.isFinite(inp));
 
     //Add a new marker to the map
-    const showPinOnMap = () => {
-      L.marker(coords)
-        .addTo(this.#map)
-        .bindPopup(
-          L.popup({
-            maxWidth: 250,
-            minWidth: 100,
-            autoClose: false,
-            closeOnClick: false,
-            className: `${type}-popup`,
-          })
-        )
-        .setPopupContent('Workout')
-        .openPopup();
-      //delete all fields text
-      inputDistance.value = '';
-      inputDuration.value = '';
-      inputCadence.value = '';
-      inputElevation.value = '';
-
-      form.classList.add('hidden');
-    };
 
     e.preventDefault();
-    const type = inputType.value;
+    type = inputType.value;
     const distance = Number(inputDistance.value);
     const duration = Number(inputDuration.value);
 
@@ -110,21 +112,65 @@ class App {
       if (type === 'running') {
         const cedence = Number(inputCadence.value);
         if (cedence) {
-          workout = new Running(coords, distance, duration, cedence);
+          workout = new Running(coords, distance, duration, cedence, type);
 
-          showPinOnMap();
+          this._renderWorkoutMarker(workout);
+          this._renderWorkout(workout);
         } else return alert('Please enter cedence');
       } else {
         const elevation = Number(inputElevation.value);
         console.log(elevation);
         if (elevation) {
-          workout = new Cycling(coords, distance, duration, elevation);
-          showPinOnMap();
+          workout = new Cycling(coords, distance, duration, elevation, type);
+          this._renderWorkoutMarker(workout);
+          this._renderWorkout(workout);
         } else return alert('Please enter elevation');
       }
       if (workout) this.#workouts.push(workout);
       console.log(this.#workouts);
     } else return alert('Please enter all fields');
+  }
+
+  _renderWorkout(workout) {
+    const description = `${
+      workout.name[0].toUpperCase() + workout.name.slice(1)
+    } on ${months[workout.date.getMonth()]} ${workout.date.getDay()}`;
+    const html = `<li class="workout workout--${workout.name}" data-id="${
+      workout.id
+    }">
+    <h2 class="workout__title">${description}</h2>
+    <div class="workout__details">
+      <span class="workout__icon">${
+        workout.name === 'running' ? '🏃‍♂️' : '🚴‍♀️'
+      }</span>
+      <span class="workout__value">${workout.distance}</span>
+      <span class="workout__unit">km</span>
+    </div>
+    <div class="workout__details">
+      <span class="workout__icon">⏱</span>
+      <span class="workout__value">${workout.duration}</span>
+      <span class="workout__unit">min</span>
+    </div>
+    <div class="workout__details">
+    <span class="workout__icon">⚡️</span>
+    <span class="workout__value">${
+      workout.name === 'running'
+        ? workout.pace.toFixed(2)
+        : workout.speed.toFixed(2)
+    }</span>
+    <span class="workout__unit">${
+      workout.name === 'running' ? 'MIN/KM' : 'KM/H'
+    }</span>
+    </div>
+    <div class="workout__details">
+    <span class="workout__icon">${
+      workout.name === 'running' ? '🦶🏼' : '⛰'
+    }</span>
+    <span class="workout__value">223</span>
+    <span class="workout__unit">m</span>
+    </div>`;
+
+    form.insertAdjacentHTML('afterend', html);
   }
 }
 
