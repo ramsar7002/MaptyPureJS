@@ -1,7 +1,16 @@
-export class Cycling extends workout {
-  constructor(type, distance, duration, coords, elevationGain, speed) {
-    super(type, distance, duration, coords);
+import { Workout } from './Workout.js';
+
+export class Cycling extends Workout {
+  constructor(coords, distance, duration, elevationGain) {
+    super(coords, distance, duration);
     this.elevationGain = elevationGain;
-    this.speed = speed;
+    this.calcSpeed();
+  }
+
+  calcSpeed() {
+    // km/h
+    this.speed = this.distance / (this.duration / 60);
+
+    return this.speed;
   }
 }
