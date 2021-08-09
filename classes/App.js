@@ -17,6 +17,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 class App {
   #map;
   #mapE;
+  #workouts = [];
   constructor(workouts, map) {
     this._getPosition();
     this.workouts = workouts;
@@ -69,6 +70,9 @@ class App {
   }
 
   _newWorkout(e) {
+    const validInputs = (...inputs) =>
+      inputs.every(inp => Number.isFinite(inp));
+
     //Add a new marker to the map
     const showPinOnMap = () => {
       L.marker(coords)
@@ -97,25 +101,30 @@ class App {
     const type = inputType.value;
     const distance = Number(inputDistance.value);
     const duration = Number(inputDuration.value);
-    const cedence = Number(inputCadence.value);
-    const elevation = Number(inputElevation.value);
 
     const { lat, lng } = this.#mapE.latlng;
     const coords = [lat, lng];
+    let workout;
 
-    if (type && distance && duration) {
+    if (typeof type && validInputs(distance, duration)) {
       if (type === 'running') {
+        const cedence = Number(inputCadence.value);
         if (cedence) {
-          const run1 = new Running(coords, distance, duration, cedence);
+          workout = new Running(coords, distance, duration, cedence);
+
           showPinOnMap();
-          console.log(run1);
-        }
-      } else if (elevation) {
-        const cyc1 = new Cycling(coords, distance, duration, elevation);
-        showPinOnMap();
-        console.log(cyc1);
+        } else return alert('Please enter cedence');
+      } else {
+        const elevation = Number(inputElevation.value);
+        console.log(elevation);
+        if (elevation) {
+          workout = new Cycling(coords, distance, duration, elevation);
+          showPinOnMap();
+        } else return alert('Please enter elevation');
       }
-    } else alert('Please enter all fields');
+      if (workout) this.#workouts.push(workout);
+      console.log(this.#workouts);
+    } else return alert('Please enter all fields');
   }
 }
 
