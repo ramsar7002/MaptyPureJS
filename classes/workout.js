@@ -1,6 +1,6 @@
 export class Workout {
   date = new Date();
-  id = (new Date() + '').slice(-10);
+  id = Date.now();
   constructor(coords, distance, duration) {
     this.coords = coords;
     this.distance = distance; //in km;
