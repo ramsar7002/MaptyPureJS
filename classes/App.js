@@ -85,9 +85,10 @@ class App {
   }
 
   _renderWorkoutMarker = workout => {
+    const d = new Date();
     const description = `${workout.name === 'running' ? '🏃‍♂️' : '🚴‍♀️'} ${
       workout.name[0].toUpperCase() + workout.name.slice(1)
-    } on ${months[workout.date.getMonth()]} ${workout.date.getDay()}`;
+    } on ${months[workout.date.getMonth()]} ${workout.date.getDate()}`;
     L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
@@ -144,8 +145,8 @@ class App {
         } else return alert('Please enter elevation');
       }
       if (workout) this.#workouts.push(workout);
-
-      this._setLocalStorage();
+      console.log(this.#workouts)
+      if(this.#workouts.length!=0)this._setLocalStorage();
     } else return alert('Please enter all fields');
   }
 
@@ -159,7 +160,12 @@ class App {
     const html = `<li class="workout workout--${workout.name}" data-id="${
       workout.id
     }">
+    
+    <div class="workout__title">
     <h2 class="workout__title">${description}</h2>
+    <h2 class="deleteBtn">X</h2>
+    </div>
+    
     <div class="workout__details">
       <span class="workout__icon">${
         workout.name === 'running' ? '🏃‍♂️' : '🚴‍♀️'
@@ -189,12 +195,15 @@ class App {
     }</span>
     <span class="workout__value">223</span>
     <span class="workout__unit">m</span>
-    </div>`;
+    </div>
+    </li>`;
 
     form.insertAdjacentHTML('afterend', html);
   }
 
   _moveToPopup(e) {
+    if(e.target.classList.contains('deleteBtn')) return this._deleteWorkout(e)
+
     const workoutEl = e.target.closest('.workout');
     if (!workoutEl) return;
     const workout = this.#workouts.find(
@@ -214,7 +223,6 @@ class App {
 
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
-    console.log(data);
 
     if (!data) return;
 
@@ -223,6 +231,20 @@ class App {
     this.#workouts.forEach(work => {
       this._renderWorkout(work);
     });
+  }
+
+  _deleteWorkout(e){
+    
+    const id = Number(e.target.closest('.workout').dataset.id);
+    const works = document.querySelectorAll('.workout');
+    works.forEach(work=>work.remove())
+    //containerWorkouts.innerHTML=''
+    this.#workouts= this.#workouts.filter(work=>work.id!=id);
+    this._setLocalStorage()
+    this.#workouts.forEach(work=>{
+      this._renderWorkout(work)
+    })
+
   }
 }
 
