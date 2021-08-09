@@ -1,8 +1,8 @@
 import { Workout } from './Workout.js';
 
 export class Cycling extends Workout {
-  constructor(coords, distance, duration, elevationGain) {
-    super(coords, distance, duration);
+  constructor(coords, distance, duration, elevationGain, name) {
+    super(coords, distance, duration, name);
     this.elevationGain = elevationGain;
     this.calcSpeed();
   }
