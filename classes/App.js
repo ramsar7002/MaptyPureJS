@@ -1,4 +1,9 @@
+import { Workout } from './Workout.js';
+import { Cycling } from './Cycling.js';
+import { Running } from './Running.js';
+
 // prettier-ignore
+
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const form = document.querySelector('.form');
@@ -64,17 +69,8 @@ class App {
   }
 
   _newWorkout(e) {
-    e.preventDefault();
-    const type = inputType.value;
-    const distance = Number(inputDistance.value);
-    const duration = Number(inputDuration.value);
-    const cedence = Number(inputCadence.value);
-
-    const { lat, lng } = this.#mapE.latlng;
-    const coords = [lat, lng];
-
-    if (type && distance && duration && cedence) {
-      //Add a new marker to the map
+    //Add a new marker to the map
+    const showPinOnMap = () => {
       L.marker(coords)
         .addTo(this.#map)
         .bindPopup(
@@ -92,8 +88,33 @@ class App {
       inputDistance.value = '';
       inputDuration.value = '';
       inputCadence.value = '';
+      inputElevation.value = '';
 
       form.classList.add('hidden');
+    };
+
+    e.preventDefault();
+    const type = inputType.value;
+    const distance = Number(inputDistance.value);
+    const duration = Number(inputDuration.value);
+    const cedence = Number(inputCadence.value);
+    const elevation = Number(inputElevation.value);
+
+    const { lat, lng } = this.#mapE.latlng;
+    const coords = [lat, lng];
+
+    if (type && distance && duration) {
+      if (type === 'running') {
+        if (cedence) {
+          const run1 = new Running(coords, distance, duration, cedence);
+          showPinOnMap();
+          console.log(run1);
+        }
+      } else if (elevation) {
+        const cyc1 = new Cycling(coords, distance, duration, elevation);
+        showPinOnMap();
+        console.log(cyc1);
+      }
     } else alert('Please enter all fields');
   }
 }
